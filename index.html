@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="initial-scale=2.0," />
+	<title>Jai Ho Mapper</title>
+	<style type="text/css">
+
+	</style>
+
+	<!-- Google Maps and Places API -->
+	<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyANYLww0NTvEGw6sCeEX2MtNPjzJzy1nNs"></script>
+
+	<!-- jQuery -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
+	<!-- bootstrap -->
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<!-- main -->
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+	<script type="text/javascript">
+		//declare namespace
+        var jaiho = {};
+
+		//set the geocoder
+		var geocoder = new google.maps.Geocoder();
+
+
+
+
+	function geocodeAddress(geocoder, resultsMap) {
+	   var address = document.getElementById('address').value;
+	   geocoder.geocode({'address': address}, function(results, status) {
+		 if (status === 'OK') {
+		   resultsMap.setCenter(results[0].geometry.location);
+		//    var marker = new google.maps.Marker({
+		// 	 map: resultsMap,
+		// 	 position: results[0].geometry.location
+		//    });
+		   	map.setZoom(10);
+            map.panTo(results[0].geometry.location);
+		 } else {
+		   alert('Geocode was not successful for the following reason: ' + status);
+		 }
+	   });
+
+	// document.onkeydown=function(evt){
+    //     var keyCode = evt ? (evt.which ? evt.which : evt.keyCode) : event.keyCode;
+    //     if(keyCode == 13)
+    //     {
+    //         geocodeAddress(geocoder, map);
+    //     }
+    // }
+
+document.onkeydown=function(){
+    if(window.event.keyCode=='13'){
+        geocodeAddress(geocoder, map);
+    }
+}
+}
+
+		//declare map
+		var map;
+
+		//declare country data layer
+		var countrydata
+
+
+		var bounds;
+
+		function trace(message)
+		{
+			if (typeof console != 'undefined')
+			{
+				console.log(message);
+			}
+		}
+
+		//Function that gets run when the document loads
+		jaiho.initialize = function(){
+			var latlng = new google.maps.LatLng(0,0);
+			var myOptions = {
+				zoom: 2,
+				center: latlng,
+				minZoom:2,
+				mapTypeId: google.maps.MapTypeId.SATELLITE
+			};
+
+
+			 	map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+
+			var style = [
+				{
+				  featureType: 'water',
+				  elementType: 'all',
+				  stylers: [
+					{ color: "#000000" },
+					{ saturation: -100 }
+				  ]
+				},
+				{
+				  featureType: 'landscape',
+				  elementType: 'all',
+				  stylers: [
+					{ color: "#DCDCDC" }
+				  ]
+				}
+			  ];
+
+			// var styledMapType = new google.maps.StyledMapType(style, {
+			// 	map: map,
+			// 	name: 'Styled Map'
+			//   });
+			//   map.mapTypes.set('map-style', styledMapType);
+			//   map.setMapTypeId('map-style');
+
+			countrydata = new google.maps.FusionTablesLayer({
+				map: map,
+				heatmap: { enabled: false },
+				query: {
+					select: "col0",
+					from: "1Xqxkh9tI295xpm7xjcAAkTHh3RDEpYekZ6wLwSdo",
+					where: ""
+				},
+					options: {
+					styleId: 2,
+					templateId: 2
+					}
+			});
+			//
+			// document.getElementById('submit').addEventListener('click', function() {
+			//    geocodeAddress(geocoder, map);
+			//  });
+			$("#submit").click(function(){
+				 geocodeAddress(geocoder, map);
+			 });
+
+			$(document).keypress(function(e) {
+				    if(e.which == 13) {
+				        geocodeAddress(geocoder, map);
+				    }
+				});
+
+					$("#Totalpop").click(function(){
+						$("#map_canvas").load("html/TotalPopulation.html", function() {
+							  initialize();
+						   });
+						//  	$("#map_canvas").load("html/TotalPopulation.html #map_canvas > *")
+							//loadContent("#Totalpop");
+					  });
+
+
+				 	$("#Popgrowth").click(function(){
+							 $("#map_canvas").load("html/PopGrowth.html", function() {
+								   initialize();
+								});
+							// 	  	$("#map_canvas").load("html/PopGrowth.html #map_canvas");
+		  			});
+					$("#Urbanpop").click(function(){
+							 $("#map_canvas").load("html/UrbanPop.html", function() {
+								   initialize();
+								});
+		  			});
+
+					$("#Slumpop").click(function(){
+							 $("#map_canvas").load("html/UrbanSlumPop.html", function() {
+								   initialize();
+								});
+		  			});
+
+
+
+       			}
+
+
+
+
+		</script>
+</head>
+<body onload="jaiho.initialize()">
+	<div id='nav bar' style="padding: 10px; padding-top: 15px; background-color:#fff;">
+	<div id="floating-panel">
+		  <input id="address" type="textbox" >
+		  <input id="submit" type="button" value="Search">
+	</div>
+		<div><img id="icon" src="images/icon.png"><h2 id="title">Informal Settlement Mapper</h2></div>
+		<!-- <label style="color:black">Select an Indicator:</label> -->
+						<ul class="nav nav-tabs nav-justified">
+
+							 <li  role="presentation" id= "Totalpop"><a href="#">
+							 Total Population</a>
+							 </li>
+
+							 <li role="presentation" id="Popgrowth"><a href="#">Population Growth
+							 </li></a>
+
+							  <li role="presentation" id="Urbanpop"><a href="#">
+								  Urban Population</a>
+							 </li>
+
+							 <li role="presentation" id="Slumpop"><a href="#">
+							 % of Urban Population living in Slums</a>
+							 </li>
+
+							 <li role="presentation" id="Locations" class="active">
+							  <a href="">Informal Settlements</a>
+							 </li>
+						</ul>
+
+	</div>
+
+	<div id="map_canvas" style="height:100%"></div>
+
+	<div id='footer' style="padding: 10px; padding-top: 15px; background-color:#D3D3D3; height: 20px;"></div>
+</body>
+</html>

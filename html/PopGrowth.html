@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+<!--
+  Copyright 2011 Google Inc. All Rights Reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+
+    <title>Population Growth</title>
+
+    <link href="https://developers.google.com/fusiontables/docs/samples/style/default.css"
+        rel="stylesheet" type="text/css">
+    <style type="text/css">
+    #floating-panel{
+        display: none !important;
+    }
+    </style>
+    <!-- Google Maps and Places API -->
+	<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyANYLww0NTvEGw6sCeEX2MtNPjzJzy1nNs"></script>
+
+
+       <!-- bootstrap -->
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css" />
+    <!-- main -->
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="bootstrap/js/bootstrap.min.js"></script></span>
+
+    <script type="text/javascript">
+      /**
+       * Column names mapped to a style rule.
+       * @type {Object}
+       * @const
+       */
+      var COLUMN_STYLES = {
+       '1970': [
+         {
+           'min': -3.00,
+            'max': 1.00,
+            'color': '#FE7276'
+          },
+          {
+            'min':1.00,
+            'max': 4.00,
+            'color': '#FE3F44'
+          },
+          {
+            'min': 4.01,
+            'max': 7.00,
+            'color': '#BE2F33'
+          },
+          {
+            'min': 7.01,
+            'max': 10.00,
+            'color': '#A40004'
+          }
+        ],
+       '1990': [
+         {
+           'min': -3.00,
+            'max': 1.00,
+            'color': '#FE7276'
+          },
+          {
+            'min':1.00,
+            'max': 4.00,
+            'color': '#FE3F44'
+          },
+          {
+            'min': 4.01,
+            'max': 7.00,
+            'color': '#BE2F33'
+          },
+          {
+            'min': 7.01,
+            'max': 10.00,
+            'color': '#A40004'
+          }
+        ],
+		'2010': [
+         {
+           'min': -3.00,
+            'max': 1.00,
+            'color': '#FE7276'
+          },
+          {
+            'min':1.00,
+            'max': 4.00,
+            'color': '#FE3F44'
+          },
+          {
+            'min': 4.01,
+            'max': 7.00,
+            'color': '#BE2F33'
+          },
+          {
+            'min': 7.01,
+            'max': 10.00,
+            'color': '#A40004'
+          }
+        ],
+      };
+
+      function initialize() {
+        var map = new google.maps.Map(document.getElementById('map-canvas'), {
+          center: new google.maps.LatLng(0,0),
+          zoom: 2,
+		minZoom: 2,
+		maxZoom: 8,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+		var style = [
+						{
+						  featureType: 'water',
+						  elementType: 'all',
+						  stylers: [
+							{ color: "#000000" },
+							{ saturation: -100 }
+						  ]
+						},
+						{
+						  featureType: 'landscape',
+						  elementType: 'all',
+						  stylers: [
+							{ color: "#DCDCDC" }
+						  ]
+						}
+					  ];
+
+		var styledMapType = new google.maps.StyledMapType(style, {
+				map: map,
+				name: 'Styled Map'
+			  });
+			  map.mapTypes.set('map-style', styledMapType);
+			  map.setMapTypeId('map-style');
+      var layer = new google.maps.FusionTablesLayer({
+				map: map,
+				heatmap: { enabled: false },
+				query: {
+					select: "col0\x3e\x3e1",
+					from: "1Dv6e10AFfaPCuYpGZW0lRQG0_8gqjDVTT5Ug2MU",
+					where: ""
+          },
+		options: {
+	styleId: 2, templateId: 2}
+        });
+        layer.setMap(map);
+
+        initSelectmenu();
+        for (column in COLUMN_STYLES) {
+          break;
+        }
+        applyStyle(map, layer, column);
+        addLegend(map);
+
+        google.maps.event.addDomListener(document.getElementById('selector'),
+            'change', function() {
+              var selectedColumn = this.value;
+              applyStyle(map, layer, selectedColumn);
+              updateLegend(selectedColumn);
+        });
+      }
+
+      // Initialize the drop-down menu
+      function initSelectmenu() {
+        var selectMenu = document.getElementById('selector');
+        for (column in COLUMN_STYLES) {
+          var option = document.createElement('option');
+          option.setAttribute('value', column);
+          option.innerHTML = column;
+          selectMenu.appendChild(option);
+        }
+      }
+
+      // Apply the style to the layer & generate corresponding legend
+      function applyStyle(map, layer, column) {
+        var columnStyle = COLUMN_STYLES[column];
+        var styles = [];
+
+        for (var i in columnStyle) {
+          var style = columnStyle[i];
+          styles.push({
+            where: generateWhere(column, style.min, style.max),
+            polygonOptions: {
+              fillColor: style.color,
+              fillOpacity: style.opacity ? style.opacity : 0.8
+            }
+          });
+        }
+
+        layer.set('styles', styles);
+      }
+
+      // Create the where clause
+      function generateWhere(columnName, low, high) {
+        var whereClause = [];
+        whereClause.push("'");
+        whereClause.push(columnName);
+        whereClause.push("' >= ");
+        whereClause.push(low);
+        whereClause.push(" AND '");
+        whereClause.push(columnName);
+        whereClause.push("' < ");
+        whereClause.push(high);
+        return whereClause.join('');
+      }
+
+      // Initialize the legend
+      function addLegend(map) {
+        var legendWrapper = document.createElement('div');
+        legendWrapper.id = 'legendWrapper';
+        legendWrapper.index = 1;
+        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(
+            legendWrapper);
+        legendContent(legendWrapper, column);
+      }
+
+      // Update the legend content
+      function updateLegend(column) {
+        var legendWrapper = document.getElementById('legendWrapper');
+        var legend = document.getElementById('legend');
+        legendWrapper.removeChild(legend);
+        legendContent(legendWrapper, column);
+      }
+
+      // Generate the content for the legend
+      function legendContent(legendWrapper, column) {
+        var legend = document.createElement('div');
+        legend.id = 'legend';
+
+        var title = document.createElement('p');
+        title.innerHTML = column;
+        legend.appendChild(title);
+
+        var columnStyle = COLUMN_STYLES[column];
+        for (var i in columnStyle) {
+          var style = columnStyle[i];
+
+          var legendItem = document.createElement('div');
+
+          var color = document.createElement('span');
+          color.setAttribute('class', 'color');
+          color.style.backgroundColor = style.color;
+          legendItem.appendChild(color);
+
+          var minMax = document.createElement('span');
+          minMax.innerHTML = style.min + ' - ' + style.max;
+          legendItem.appendChild(minMax);
+
+          legend.appendChild(legendItem);
+        }
+
+        legendWrapper.appendChild(legend);
+      }
+
+      google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  </head>
+
+<body onload="jaiho.initialize()">
+
+	<!-- map div container -->
+    <div id="map-canvas"></div>
+    <select id="selector"></select>
+  </body>
+</html>
